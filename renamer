@@ -4,10 +4,16 @@
 OIFS="$IFS"
 IFS=$'\n' 
 
-# List all the ways to convert series names
+# List all the ways to convert series names:
 
-type[0]="s/.*\([S][0-9]*[E][0-9]*\).*\(\.[0-9a-zA-Z]\{3\}$\)/$1 \1\2/"
 # pretty.little.liars ==> Pretty Little Liars S02E06.avi
+type[0]="s/.*\([S][0-9]*[E][0-9]*\).*\(\.[0-9a-zA-Z]\{3\}$\)/$1 \1\2/"
+
+# FUT416 - Three Hundred Big Boys.mp4 ==> Futurama S04E16.mp4
+type[1]="s/.*\([0-9]\)\([0-9]\{2\}\).*\(\.[0-9a-zA-Z]\{3\}$\)/$1 S0\1E\2\3/"
+
+# 5x03 - What Is And What Should Never Be.avi
+type[2]="s/.*\([0-9]\)[x]\([0-9]\{2\}\).*\(\.[0-9a-zA-Z]\{3\}$\)/$1 S0\1E\2\3/"
 
 # Prompt user
 echo "Renames to do:"
