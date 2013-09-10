@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Set up environment variable so that files are looped though correctly
+OIFS="$IFS"
+IFS=$'\n' 
+
+# List all the ways to convert series names
+
+type[0]="s/.*\([S][0-9]*[E][0-9]*\).*\(\.[0-9a-zA-Z]\{3\}$\)/$1 \1\2/"
+# pretty.little.liars ==> Pretty Little Liars S02E06.avi
+
+# Prompt user
+echo "Renames to do:"
+echo $1
+
+# Start with type[0]
+i=0
+
+# Determine type to use
+while :
+do
+    for file in $(find . -type f)
+    do
+        if [ ! $file == "." ]; then
+            echo "$file ==> $(echo $file | sed "${type[i]}")"
+        fi
+    done
+    echo "Is this correct?"
+    read correct
+    if [[ $correct == "y" ]]; then
+        break
+    fi
+    i=$(($i+1))
+done
+
+echo "Do you want to do these renames?  [y/n]"
+read rename
+
+if [[ $rename == "y" ]]; then
+    for file in $(find . -type f)
+    do
+        if [ ! $file == "." ]; then
+            mv $file "$(echo $file | sed "${type[i]}")"
+        fi
+    done
+else
+    echo "Aborted"
+fi
+
+# Set environment variable back to normal
+IFS="$OIFS"
