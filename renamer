@@ -5,56 +5,56 @@ OIFS="$IFS"
 IFS=$'\n' 
 
 # List all the ways to convert series names:
+function setupTypes() {
+    # pretty.little.liars s02E06 ==> Pretty Little Liars S02E06.avi
+    type[0]="s/.*[sS]\([0-9]\{2\}\)[eE]\([0-9]\{2\}\).*\(\.[0-9a-zA-Z]\{3\}$\)/$1 S\1E\2\3/"
 
-# pretty.little.liars ==> Pretty Little Liars S02E06.avi
-type[0]="s/.*\([S][0-9]*[E][0-9]*\).*\(\.[0-9a-zA-Z]\{3\}$\)/$1 \1\2/"
+    # FUT416 - Three Hundred Big Boys.mp4 ==> Futurama S04E16.mp4
+    type[1]="s/.*[^x|^0-9]\([0-9]\)\([0-9]\{2\}\).*\(\.[0-9a-zA-Z]\{3\}$\)/$1 S0\1E\2\3/"
 
-# FUT416 - Three Hundred Big Boys.mp4 ==> Futurama S04E16.mp4
-type[1]="s/.*\([0-9]\)\([0-9]\{2\}\).*\(\.[0-9a-zA-Z]\{3\}$\)/$1 S0\1E\2\3/"
+    # 5x03 - What Is And What Should Never Be.avi ==> That 70's Show S05E03.avi
+    type[2]="s/.*\([0-9]\)[x]\([0-9]\{2\}\).*\(\.[0-9a-zA-Z]\{3\}$\)/$1 S0\1E\2\3/"
 
-# 5x03 - What Is And What Should Never Be.avi ==> That 70's Show S05E03.avi
-type[2]="s/.*\([0-9]\)[x]\([0-9]\{2\}\).*\(\.[0-9a-zA-Z]\{3\}$\)/$1 S0\1E\2\3/"
+    # 11 - Good Old Fashioned Lover Boy.avi ==> That 70's Show S08E11.avi
+    type[3]="s/.*\([0-9]\{2\}\).*\(\.[0-9a-zA-Z]\{3\}$\)/$1E\1\2/"
 
-# 11 - Good Old Fashioned Lover Boy.avi ==> That 70's Show S08E11.avi
-type[3]="s/.*\([0-9]\{2\}\).*\(\.[0-9a-zA-Z]\{3\}$\)/$1E\1\2/"
+    # pretty.little.liars s1E06 ==> Pretty Little Liars S02E06.avi
+    type[4]="s/.*[sS]\([0-9]\)[eE]\([0-9]\{2\}\).*\(\.[0-9a-zA-Z]\{3\}$\)/$1 S0\1E\2\3/"
+}
 
-# Prompt user
-echo "Renames to do:"
-echo $1
+setupTypes
 
-# Start with type[0]
-i=0
-
-# Determine type to use
-while :
-do
+function rename() {
     for file in $(find . -type f)
     do
         if [ ! $file == "." ]; then
-            echo "$file ==> $(echo $file | sed "${type[i]}")"
+            for i in `seq 0 ${#type[@]}`
+            do
+                filename="$seriesName$(echo $file | sed "${type[i]}")"
+                pat=".*[S][0-9]{2}[E][0-9]{2}[.][0-9a-zA-Z]{3}"
+
+                if [[ $filename =~ $pat ]]; then
+                    
+                    if $1; then
+                        echo $file
+                        mv "$file" "`dirname ${file}`/$filename"
+                    else
+                        echo "$file ==> $filename"
+                    fi
+                    break
+                fi
+            done
         fi
     done
-    echo "Is this correct?"
-    read correct
-    if [[ $correct == "y" ]]; then
-        break
-    fi
-    i=$(($i+1))
-done
+}
+seriesName=$1
 
-echo "Do you want to do these renames?  [y/n]"
-read rename
+rename false
 
-if [[ $rename == "y" ]]; then
-    for file in $(find . -type f)
-    do
-        if [ ! $file == "." ]; then
-            mv $file "$(echo $file | sed "${type[i]}")"
-        fi
-    done
-else
-    echo "Aborted"
+echo "Is this correct and would you like to rename those files?"
+read correct
+if [[ $correct == "y" ]]; then
+    rename true
 fi
 
-# Set environment variable back to normal
 IFS="$OIFS"
